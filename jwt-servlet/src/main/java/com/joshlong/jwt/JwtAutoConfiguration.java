@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @RequiredArgsConstructor
-@Order(1002)
+@Order(Integer.MAX_VALUE - 100)
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtAutoConfiguration extends WebSecurityConfigurerAdapter {
 
