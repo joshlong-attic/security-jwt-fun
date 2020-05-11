@@ -94,23 +94,6 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         setFilterProcessesUrl("/api/login");
     }
 
-   /*
-    @Override
-    @SneakyThrows
-    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain, Authentication authentication) {
-
-        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.HS256)
-                .type(JOSEObjectType.JWT)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .build();
-        JWSObject jwsObject = new JWSObject(jwsHeader, new Payload("Hello, world!"));
-        jwsObject.sign(new MACSigner(jwtSecret));
-        String token = jwsObject.serialize();
-        response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    }
-    */
-
-
     @Override
     protected void successfulAuthentication(
             HttpServletRequest request, HttpServletResponse response,
@@ -126,29 +109,20 @@ class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
                 .setSubject(user.getUsername())
                 .setExpiration(new Date(System.currentTimeMillis() + 864000000))
                 .compact();
-
         response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
     }
+
 
 }
 
 @Log4j2
 class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
-
     private String jwtSecret;
-    private String jwtIssuer;
-    private String jwtType;
-    private String jwtAudience;
 
-    public JwtAuthorizationFilter(AuthenticationManager authenticationManager,
-                                  String jwtAudience, String jwtIssuer, String jwtSecret, String jwtType) {
+    JwtAuthorizationFilter(AuthenticationManager authenticationManager, String jwtSecret) {
         super(authenticationManager);
-
-        this.jwtAudience = jwtAudience;
-        this.jwtIssuer = jwtIssuer;
         this.jwtSecret = jwtSecret;
-        this.jwtType = jwtType;
     }
 
     @Override
@@ -157,28 +131,22 @@ class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             HttpServletResponse response,
             FilterChain filterChain)
             throws IOException, ServletException {
-
-        UsernamePasswordAuthenticationToken authentication = parseToken(request);
-
+        UsernamePasswordAuthenticationToken authentication = this.parseToken(request);
         if (authentication != null) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } else {
             SecurityContextHolder.clearContext();
         }
-
         filterChain.doFilter(request, response);
     }
 
     private UsernamePasswordAuthenticationToken parseToken(HttpServletRequest request) {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
         String bearerPrefix = "bearer ";
-        if (StringUtils.hasText(token) &&
-                token.toLowerCase().startsWith(bearerPrefix)) {
+        if (StringUtils.hasText(token) && token.toLowerCase().startsWith(bearerPrefix)) {
 
             String claims = token.substring(bearerPrefix.length());
-//            String claims = token.replace("Bearer ", "").trim();
             try {
-
                 Jws<Claims> claimsJws = Jwts
                         .parser()
                         .setSigningKey(jwtSecret.getBytes())
@@ -188,11 +156,9 @@ class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                 if (StringUtils.isEmpty(username)) {
                     return null;
                 }
-
                 return new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority("USER")));
-
             } catch (JwtException exception) {
-                log.warn("Some exception : {} failed : {}", token, exception.getMessage());
+                log.warn("exception : {} failed : {}", token, exception.getMessage());
             }
         }
         return null;
@@ -226,7 +192,7 @@ class JwtSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .addFilter(new JwtAuthenticationFilter(authenticationManager, jwtAudience, jwtIssuer, jwtSecret, jwtType))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager, jwtAudience, jwtIssuer, jwtSecret, jwtType))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager, jwtSecret))
                 .authorizeRequests(ar ->
                                 ar
 //                                .antMatchers("/hello").authenticated()
