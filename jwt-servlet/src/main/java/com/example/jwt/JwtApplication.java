@@ -46,7 +46,9 @@ class MySecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
+		http//
+				.cors(Customizer.withDefaults())//
+				.csrf(AbstractHttpConfigurer::disable)//
 				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 	}
 

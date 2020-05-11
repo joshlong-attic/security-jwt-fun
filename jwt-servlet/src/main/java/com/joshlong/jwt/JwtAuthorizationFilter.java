@@ -1,7 +1,5 @@
 package com.joshlong.jwt;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.log4j.Log4j2;
@@ -23,7 +21,7 @@ import java.util.List;
 @Log4j2
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
-	private String jwtSecret;
+	private final String jwtSecret;
 
 	public JwtAuthorizationFilter(AuthenticationManager authenticationManager, String jwtSecret) {
 		super(authenticationManager);
@@ -33,7 +31,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws IOException, ServletException {
-		UsernamePasswordAuthenticationToken authentication = this.parseToken(request);
+		var authentication = this.parseToken(request);
 		if (authentication != null) {
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
@@ -44,15 +42,13 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 	}
 
 	private UsernamePasswordAuthenticationToken parseToken(HttpServletRequest request) {
-		String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-		String bearerPrefix = "bearer ";
+		var token = request.getHeader(HttpHeaders.AUTHORIZATION);
+		var bearerPrefix = "bearer ";
 		if (StringUtils.hasText(token) && token.toLowerCase().startsWith(bearerPrefix)) {
-
-			String claims = token.substring(bearerPrefix.length());
+			var claims = token.substring(bearerPrefix.length());
 			try {
-				Jws<Claims> claimsJws = Jwts.parser().setSigningKey(jwtSecret.getBytes()).parseClaimsJws(claims);
-
-				String username = claimsJws.getBody().getSubject();
+				var claimsJws = Jwts.parser().setSigningKey(jwtSecret.getBytes()).parseClaimsJws(claims);
+				var username = claimsJws.getBody().getSubject();
 				if (StringUtils.isEmpty(username)) {
 					return null;
 				}

@@ -42,9 +42,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 	@Override
 	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
 			FilterChain filterChain, Authentication authentication) {
-		User user = (User) authentication.getPrincipal();
-		javax.crypto.SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-		String token = Jwts.builder().signWith(secretKey, SignatureAlgorithm.HS512).setHeaderParam("typ", jwtType)
+		var user = (User) authentication.getPrincipal();
+		var secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+		var token = Jwts.builder().signWith(secretKey, SignatureAlgorithm.HS512).setHeaderParam("typ", jwtType)
 				.setIssuer(jwtIssuer).setAudience(jwtAudience).setSubject(user.getUsername())
 				.setExpiration(new Date(System.currentTimeMillis() + 864000000)).compact();
 		response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
