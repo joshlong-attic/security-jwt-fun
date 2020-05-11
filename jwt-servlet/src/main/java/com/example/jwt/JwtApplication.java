@@ -1,6 +1,5 @@
 package com.example.jwt;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,46 +27,37 @@ import java.util.Map;
 @EnableWebSecurity
 public class JwtApplication {
 
+	public static void main(String[] args) {
+		SpringApplication.run(JwtApplication.class, args);
+	}
 
-    public static void main(String[] args) {
-        SpringApplication.run(JwtApplication.class, args);
-    }
+	@Bean
+	InMemoryUserDetailsManager authentication() {
+		UserDetails one = User.withDefaultPasswordEncoder().username("client1").password("pw").roles("USER").build();
+		UserDetails two = User.withDefaultPasswordEncoder().username("client2").password("pw").roles("USER").build();
+		return new InMemoryUserDetailsManager(one, two);
+	}
 
-    @Bean
-    InMemoryUserDetailsManager authentication() {
-        UserDetails one = User.withDefaultPasswordEncoder()
-                .username("client1").password("pw").roles("USER")
-                .build();
-        UserDetails two = User.withDefaultPasswordEncoder()
-                .username("client2").password("pw").roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(one, two);
-    }
 }
 
+@Configuration
+@Order(100)
+class MySecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.cors(Customizer.withDefaults()).csrf(AbstractHttpConfigurer::disable)
+				.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+	}
+
+}
 
 @RestController
 class GreetingsRestController {
 
-    @GetMapping("/hello")
-    Map<String, String> greet(@AuthenticationPrincipal Principal principal) {
-        return Map.of("greetings", "hello " + principal.getName() + "!");
-    }
-}
-
-
-@Configuration
-@RequiredArgsConstructor
-@Order(110)
-class MySecurityConfiguration extends WebSecurityConfigurerAdapter {
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-    }
-
+	@GetMapping("/hello")
+	Map<String, String> greet(@AuthenticationPrincipal Principal principal) {
+		return Map.of("greetings", "hello " + principal.getName() + "!");
+	}
 
 }

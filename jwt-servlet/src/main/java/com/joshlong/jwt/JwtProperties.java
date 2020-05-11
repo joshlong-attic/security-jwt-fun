@@ -11,8 +11,14 @@ import org.springframework.boot.context.properties.ConstructorBinding;
 @ConfigurationProperties("jwt")
 public class JwtProperties {
 
-    private final String secret;
-    private final String issuer;
-    private final String type;
-    private final String audience;
+	private final String secret;
+
+	private final String issuer;
+
+	private final String type;
+
+	private final String audience;
+
+	private final String loginUrl;
+
 }

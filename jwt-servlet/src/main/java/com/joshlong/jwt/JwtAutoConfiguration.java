@@ -10,32 +10,32 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @RequiredArgsConstructor
-@Order(1200)
+@Order(1002)
 @EnableConfigurationProperties(JwtProperties.class)
 public class JwtAutoConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final JwtProperties properties;
-    private final String loginUrl = "/api/login";
+	private final JwtProperties properties;
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests(ae -> ae.mvcMatchers(this.loginUrl).permitAll())
-                .authorizeRequests(ar -> ar.anyRequest().authenticated())
-                .addFilter(this.jwtAuthenticationFilter())
-                .addFilter(this.jwtAuthorizationFilter());
-    }
+	@Override
+	protected void configure(HttpSecurity http) throws Exception {
+		http.authorizeRequests(ae -> ae //
+				.mvcMatchers(this.properties.getLoginUrl()).permitAll() //
+				.anyRequest().authenticated() //
+		)//
+				.addFilter(this.jwtAuthenticationFilter()) //
+				.addFilter(this.jwtAuthorizationFilter());
+	}
 
-    @Bean
-    JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
-        return new JwtAuthenticationFilter(this.authenticationManager(), this.properties.getAudience(),
-                this.properties.getIssuer(), this.properties.getSecret(), this.properties.getType(),
-                this.loginUrl);
-    }
+	@Bean
+	JwtAuthenticationFilter jwtAuthenticationFilter() throws Exception {
+		return new JwtAuthenticationFilter(this.authenticationManager(), this.properties.getAudience(),
+				this.properties.getIssuer(), this.properties.getSecret(), this.properties.getType(),
+				this.properties.getLoginUrl());
+	}
 
-    @Bean
-    JwtAuthorizationFilter jwtAuthorizationFilter() throws Exception {
-        return new JwtAuthorizationFilter(this.authenticationManager(), this.properties.getSecret());
-    }
+	@Bean
+	JwtAuthorizationFilter jwtAuthorizationFilter() throws Exception {
+		return new JwtAuthorizationFilter(this.authenticationManager(), this.properties.getSecret());
+	}
+
 }
-

@@ -16,46 +16,38 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 
 /*
- * Taken from <a href="https://grobmeier.solutions/spring-security-5-jwt-basic-auth.html">this interesting article</a>.
- */
+* Taken from <a href="https://grobmeier.solutions/spring-security-5-jwt-basic-auth.html">this interesting article</a>.
+*/
 @Log4j2
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final String jwtAudience;
-    private final String jwtIssuer;
-    private final String jwtSecret;
-    private final String jwtType;
+	private final String jwtAudience;
 
-    public JwtAuthenticationFilter(
-            AuthenticationManager authenticationManager,
-            String jwtAudience, String jwtIssuer,
-            String jwtSecret, String jwtType,
-            String loginUrl) {
-        this.jwtAudience = jwtAudience;
-        this.jwtIssuer = jwtIssuer;
-        this.jwtSecret = jwtSecret;
-        this.jwtType = jwtType;
-        this.setAuthenticationManager(authenticationManager);
-        setFilterProcessesUrl(loginUrl);
-    }
+	private final String jwtIssuer;
 
-    @Override
-    protected void successfulAuthentication(
-            HttpServletRequest request, HttpServletResponse response,
-            FilterChain filterChain, Authentication authentication) {
-        User user = (User) authentication.getPrincipal();
-        javax.crypto.SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-        String token = Jwts
-                .builder()
-                .signWith(secretKey, SignatureAlgorithm.HS512)
-                .setHeaderParam("typ", jwtType)
-                .setIssuer(jwtIssuer)
-                .setAudience(jwtAudience)
-                .setSubject(user.getUsername())
-                .setExpiration(new Date(System.currentTimeMillis() + 864000000))
-                .compact();
-        response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-    }
+	private final String jwtSecret;
 
+	private final String jwtType;
+
+	public JwtAuthenticationFilter(AuthenticationManager authenticationManager, String jwtAudience, String jwtIssuer,
+			String jwtSecret, String jwtType, String loginUrl) {
+		this.jwtAudience = jwtAudience;
+		this.jwtIssuer = jwtIssuer;
+		this.jwtSecret = jwtSecret;
+		this.jwtType = jwtType;
+		this.setAuthenticationManager(authenticationManager);
+		setFilterProcessesUrl(loginUrl);
+	}
+
+	@Override
+	protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+			FilterChain filterChain, Authentication authentication) {
+		User user = (User) authentication.getPrincipal();
+		javax.crypto.SecretKey secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+		String token = Jwts.builder().signWith(secretKey, SignatureAlgorithm.HS512).setHeaderParam("typ", jwtType)
+				.setIssuer(jwtIssuer).setAudience(jwtAudience).setSubject(user.getUsername())
+				.setExpiration(new Date(System.currentTimeMillis() + 864000000)).compact();
+		response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+	}
 
 }
